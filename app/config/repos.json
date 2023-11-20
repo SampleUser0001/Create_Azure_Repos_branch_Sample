@@ -1,0 +1,12 @@
+[
+    {
+        "repo_name" : "SampleProject",
+        "branches" : [
+            {
+                "source":"develop",
+                "feature":"feature",
+                "target":"develop_2"
+            }
+        ]
+    }
+]
