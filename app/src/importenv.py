@@ -15,4 +15,5 @@ class ImportEnvKeyEnum(Enum):
     PROJECT_NAME = os.getenv("PROJECT_NAME")
     AZURE_USER = os.getenv("AZURE_USER")
     TOKEN = os.getenv("TOKEN")
+    EXPORT_HOME = os.getenv("EXPORT_HOME")
     

@@ -42,3 +42,11 @@ class CreatePullRequestModel():
         self.required = requred
         self.optional = optional
         
+# TODO データの持ち方は考える。
+@dataclass
+class ExportModel():
+    repo_name:str
+    source:str
+    feature:str
+    target:str
+    pull_request_url:str

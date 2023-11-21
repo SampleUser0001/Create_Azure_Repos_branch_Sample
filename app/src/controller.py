@@ -57,6 +57,7 @@ class CreateBranchController():
         logger.info(stream.read())
         
         return feature_branch
+    
 
 class GetRepositoryIdController():
     """
@@ -76,7 +77,8 @@ class GetRepositoryIdController():
                     ImportEnvKeyEnum.ORGANIZATION.value,
                     ImportEnvKeyEnum.PROJECT_NAME.value
                 ),
-                auth=('git',ImportEnvKeyEnum.TOKEN.value)
+                auth=(ImportEnvKeyEnum.AZURE_USER.value,
+                      ImportEnvKeyEnum.TOKEN.value)
             ).json()
 
             logger.debug(result)
@@ -160,3 +162,4 @@ class PullRequestMergeController():
     
     def __init__(self ):
         pass
+    

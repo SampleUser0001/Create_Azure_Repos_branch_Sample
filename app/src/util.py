@@ -7,8 +7,9 @@ from logutil import LogUtil
 from importenv import ImportEnvKeyEnum
 
 import json
+from typing import List
 
-from model import RepositoryModel, BranchModel
+from model import RepositoryModel, BranchModel, ExportModel
 
 PYTHON_APP_HOME = os.getenv('PYTHON_APP_HOME')
 LOG_CONFIG_FILE = ['config', 'log_config.json']
@@ -39,3 +40,13 @@ class Util():
         """
         return f'{branch.feature}/merge_to_{branch.target}_{branch_date}'
         
+    @staticmethod
+    def export(filepath:str, branch_date:str, list: List[ExportModel]) -> None:
+        with open(filepath, encoding='utf-8', mode='w') as f:
+            f.write(f'# {branch_date}' + '\n')
+            f.write('\n')
+            f.write('| Repository | Source Branch | Target Branch | Pull Requrest URL |' + '\n')
+            f.write('| :--------- | :------------ | :------------ | :---------------- |' + '\n')
+            for _ in list:
+                f.write(f'| {_.repo_name} | {_.source} | {_.target} | {_.pull_request_url} | \n') 
+            f.write('\n')

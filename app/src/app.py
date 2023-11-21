@@ -10,7 +10,7 @@ from datetime import datetime
 # from util.sample import Util
 from util import Util
 from controller import CreateBranchController, GetRepositoryIdController, CreatePullRequestController
-from model import CreatePullRequestModel
+from model import CreatePullRequestModel, BranchModel, ExportModel
 
 PYTHON_APP_HOME = os.getenv('PYTHON_APP_HOME')
 LOG_CONFIG_FILE = ['config', 'log_config.json']
@@ -43,6 +43,8 @@ if __name__ == '__main__':
     # リポジトリ一覧を取得
     repo_list = Util.load_repos(os.path.join(PYTHON_APP_HOME, 'config', 'repos.json'))
     
+    export_list = []
+    
     logger.debug(repo_list)
     for repo in repo_list:
         repo_name = repo.repo_name
@@ -67,5 +69,21 @@ if __name__ == '__main__':
                 create_pull_request_controller = CreatePullRequestController(create_pull_request_model)
                 pull_request_url = create_pull_request_controller.create()
                 logger.info(f'Pull request URL : {pull_request_url}')
+                
+                export_model = ExportModel(
+                    repo_name=repo_name,
+                    source=branch.source,
+                    feature=feature_branch,
+                    target=branch.target,
+                    pull_request_url=pull_request_url
+                )
+                export_list.append(export_model)
             except Exception as e:
                 logger.error(e)
+
+    Util.export(
+        filepath=os.path.join(ImportEnvKeyEnum.EXPORT_HOME.value, f'{BRANCH_DATE}.md'),
+        branch_date=BRANCH_DATE,
+        list=export_list)
+
+    logger.info('Finish')
