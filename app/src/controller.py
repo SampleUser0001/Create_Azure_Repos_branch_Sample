@@ -103,13 +103,7 @@ class CreatePullRequestController():
         Returns:
             str: 作成したプルリクエストのURLを返す。
         """
-        
-        auth_word=f'git:{ImportEnvKeyEnum.TOKEN.value}'
-        encoded=base64.standard_b64encode(auth_word.encode())
-        
-        
         headers = {
-            "Authorization": f"Basic {encoded.decode()}",
             "Content-Type": "application/json"
         }
         body = {
@@ -130,24 +124,37 @@ class CreatePullRequestController():
         result = requests.post(
             url=self.getURL(
                 organization=organization,
-                project=project_name
+                project=project_name,
+                repository_id=self._.repo_id
             ),
             headers=headers,
+            auth=(ImportEnvKeyEnum.AZURE_USER.value,
+                  ImportEnvKeyEnum.TOKEN.value),
             data=json.dumps(body)
         )
-        
-        logger.debug(result.status_code)
-        logger.debug(result.headers)
-        logger.debug(result.json())
+
+        result.raise_for_status()
 
         result_json = result.json()
-        pull_request_url = result_json['url']
+
+        pull_request_id = result_json['pullRequestId']
+        logger.info(f'Pull request id : {pull_request_id}')
+
+        pull_request_url = self.generate_pull_request_url(
+            organization=organization,
+            project=project_name,
+            repository_name=self._.repo_name,
+            pull_request_id=pull_request_id
+        )
         logger.info(f'Pull request url : {pull_request_url}')
         
         return pull_request_url
 
-    def getURL(self, organization:str, project:str) -> str:
-        return f'https://dev.azure.com/{organization}/{project}/_apis/pullrequest/pullrequests?api-version=7.1'
+    def getURL(self, organization:str, project:str, repository_id: str) -> str:
+        return f'https://dev.azure.com/{organization}/{project}/_apis/git/repositories/{repository_id}/pullrequests?api-version=7.1-preview.1'
+
+    def generate_pull_request_url(self, organization:str, project:str, repository_name:str, pull_request_id:int) -> str:
+        return f'https://dev.azure.com/{organization}/{project}/_git/{repository_name}/pullrequest/{pull_request_id}'
 
 class PullRequestMergeController():
     

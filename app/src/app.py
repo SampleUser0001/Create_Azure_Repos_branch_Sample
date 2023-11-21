@@ -51,19 +51,21 @@ if __name__ == '__main__':
         repo_id_getter = GetRepositoryIdController()
         repo_id = repo_id_getter.getId(repo_name)
         logger.debug(f'repo id : {repo_id}')
-
         for branch in repo.branches:
-            logger.info(f'1st : {branch.source} , 2nd : {branch.target}')
-            create_branch = CreateBranchController(repo_name, branch, BRANCH_DATE)
-            feature_branch = create_branch.create_branch()
-            logger.info(f'Created branch : {feature_branch}')
-            
-            create_pull_request_model = CreatePullRequestModel(
-                repo_name=repo_name, repo_id=repo_id,
-                branch=branch, branch_date=BRANCH_DATE, 
-                pull_request_source_branch=feature_branch,
-                requred=[], optional=[]
-            )
-            create_pull_request_controller = CreatePullRequestController(create_pull_request_model)
-            pull_request_url = create_pull_request_controller.create()
-            logger(f'Pull request URL : {pull_request_url}')
+            try:
+                logger.info(f'1st : {branch.source} , 2nd : {branch.target}')
+                create_branch = CreateBranchController(repo_name, branch, BRANCH_DATE)
+                feature_branch = create_branch.create_branch()
+                logger.info(f'Created branch : {feature_branch}')
+
+                create_pull_request_model = CreatePullRequestModel(
+                    repo_name=repo_name, repo_id=repo_id,
+                    branch=branch, branch_date=BRANCH_DATE,
+                    pull_request_source_branch=feature_branch,
+                    requred=[], optional=[]
+                )
+                create_pull_request_controller = CreatePullRequestController(create_pull_request_model)
+                pull_request_url = create_pull_request_controller.create()
+                logger.info(f'Pull request URL : {pull_request_url}')
+            except Exception as e:
+                logger.error(e)
