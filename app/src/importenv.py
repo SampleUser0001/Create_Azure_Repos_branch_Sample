@@ -11,3 +11,8 @@ load_dotenv(dotenv_path)
 class ImportEnvKeyEnum(Enum):
     """ .envファイルのキーを書く """
     GIT_CLONE_URL = os.getenv("GIT_CLONE_URL")
+    ORGANIZATION = os.getenv("ORGANIZATION")
+    PROJECT_NAME = os.getenv("PROJECT_NAME")
+    AZURE_USER = os.getenv("AZURE_USER")
+    TOKEN = os.getenv("TOKEN")
+    
