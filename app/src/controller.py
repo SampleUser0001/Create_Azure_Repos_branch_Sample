@@ -11,7 +11,8 @@ import requests
 
 from util import Util
 import json
-import base64
+import tempfile
+from enums import GitShEnum
 
 PYTHON_APP_HOME = os.getenv('PYTHON_APP_HOME')
 LOG_CONFIG_FILE = ['config', 'log_config.json']
@@ -25,39 +26,70 @@ logger.setLevel(DEBUG)
 logger.addHandler(handler)
 logger.propagate = False
 
-CREATE_BRANCH_SH = os.path.join(PYTHON_APP_HOME, 'sh', 'use_local_git.sh')
-class CreateBranchController():
+class GitController():
     """
-    _1ブランチから_2ブランチへマージするためのブランチを作成する。
+    1. git clone -b source
+    2. git diff --name-status origin/target...origin/source
+    3. git checkout -b feature and git push
     """
+    
     def __init__(self, repo_name:str, branch: BranchModel, branch_date: str):
         self.repo_name = repo_name
         self.branch = branch
         self.branch_date = branch_date
-        
-    def create_branch(self) -> str:
-        """
-        _1ブランチから_2ブランチへマージするためのブランチを作成する。
+    
+    def create_feature_branch(self): # -> str, List[str]
+        with tempfile.TemporaryDirectory() as git_dir:
+            self._git_clone(git_dir=git_dir)
 
-        Returns:
-            str: 作成したブランチ名
-        """
+            git_repo_home = os.path.join(git_dir, self.repo_name)
+            diff_list = self._git_diff(git_repo_home=git_repo_home)
+            
+            if len(diff_list) == 0:
+                return None, diff_list
+            else:
+                feature_branch = Util.generate_pull_request_source_branch(self.branch, self.branch_date)
+                self._git_checkout_feature(
+                    git_repo_home=git_repo_home,
+                    feature=feature_branch)
+                
+                return feature_branch, diff_list
+
+    def _git_clone(self, git_dir:str):
         git_url = ImportEnvKeyEnum.GIT_CLONE_URL.value + '/' + self.repo_name
-        repo_name = self.repo_name
-        source_branch = self.branch.source
-        feature_branch = Util.generate_pull_request_source_branch(self.branch, self.branch_date)
-        
         stream = os.popen(
-            f'{CREATE_BRANCH_SH} \
+            f'{GitShEnum.CLONE.path} \
+            {git_dir} \
+            {self.repo_name} \
             {git_url} \
-            {repo_name} \
-            {source_branch} \
-            {feature_branch} ')
+            {self.branch.source} ')
 
         logger.info(stream.read())
-        
-        return feature_branch
     
+    def _git_diff(self, git_repo_home:str):
+        stream = os.popen(
+            f'{GitShEnum.DIFF.path} \
+            {git_repo_home} \
+            {self.branch.target} \
+            {self.branch.source} ')
+
+        logger.info(f'git diff --name-status origin/{self.branch.target}...origin/{self.branch.source}')
+        diff_list = []
+        for line in stream.read().splitlines():
+            diff_list.append(line)
+        logger.info(diff_list)
+
+        return diff_list
+    
+    def _git_checkout_feature(self, git_repo_home:str, feature:str):
+        stream = os.popen(
+            f'{GitShEnum.CHECKOUT_FEATURE.path} \
+            {git_repo_home} \
+            {feature} ')
+        logger.info('checkout and push')
+        logger.info(stream.read())
+
+
 
 class GetRepositoryIdController():
     """
@@ -92,7 +124,7 @@ class GetRepositoryIdController():
 
     def getURL(self, organization:str, project:str) -> str:
         return f'https://dev.azure.com/{organization}/{project}/_apis/git/repositories?api-version=7.0'
-    
+
 class CreatePullRequestController():
     """プルリクエストを生成する。
     """
