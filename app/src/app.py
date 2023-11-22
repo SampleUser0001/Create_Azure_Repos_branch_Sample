@@ -9,7 +9,7 @@ from datetime import datetime
 
 # from util.sample import Util
 from util import Util
-from controller import CreateBranchController, GetRepositoryIdController, CreatePullRequestController
+from controller import GitController, GetRepositoryIdController, CreatePullRequestController
 from model import CreatePullRequestModel, BranchModel, ExportModel
 
 PYTHON_APP_HOME = os.getenv('PYTHON_APP_HOME')
@@ -55,20 +55,29 @@ if __name__ == '__main__':
         logger.debug(f'repo id : {repo_id}')
         for branch in repo.branches:
             try:
-                logger.info(f'1st : {branch.source} , 2nd : {branch.target}')
-                create_branch = CreateBranchController(repo_name, branch, BRANCH_DATE)
-                feature_branch = create_branch.create_branch()
-                logger.info(f'Created branch : {feature_branch}')
+                pull_request_url = None
 
-                create_pull_request_model = CreatePullRequestModel(
-                    repo_name=repo_name, repo_id=repo_id,
-                    branch=branch, branch_date=BRANCH_DATE,
-                    pull_request_source_branch=feature_branch,
-                    requred=[], optional=[]
-                )
-                create_pull_request_controller = CreatePullRequestController(create_pull_request_model)
-                pull_request_url = create_pull_request_controller.create()
-                logger.info(f'Pull request URL : {pull_request_url}')
+                logger.info(f'1st : {branch.source} , 2nd : {branch.target}')
+
+                # sourceからfeatureブランチを作成する。
+                # ただし、sourceとtargetの差分がない場合は作成されない。
+                git_controller = GitController(repo_name, branch, BRANCH_DATE)
+                feature_branch, git_diff = git_controller.create_feature_branch()
+                logger.info(f'Created branch : {feature_branch}')
+                if feature_branch == None:
+                    pass
+                else:
+
+                    create_pull_request_model = CreatePullRequestModel(
+                        repo_name=repo_name, repo_id=repo_id,
+                        branch=branch, branch_date=BRANCH_DATE,
+                        pull_request_source_branch=feature_branch,
+                        requred=[], optional=[]
+                    )
+
+                    create_pull_request_controller = CreatePullRequestController(create_pull_request_model)
+                    pull_request_url = create_pull_request_controller.create()
+                    logger.info(f'Pull request URL : {pull_request_url}')
                 
                 export_model = ExportModel(
                     repo_name=repo_name,
