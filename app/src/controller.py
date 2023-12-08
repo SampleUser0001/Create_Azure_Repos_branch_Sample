@@ -115,7 +115,9 @@ class GetRepositoryIdController():
 
             logger.debug(result)
 
-            id = result['value'][0]['id']
+            for v in result['value']:
+                self.id_dict[v['name']] = v['id']
+
             self.id_dict[repo] = id
 
             logger.info(f'RepositoryId , {repo} : {id}')
