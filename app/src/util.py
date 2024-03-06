@@ -48,5 +48,5 @@ class Util():
             f.write('| Repository | Source Branch | Target Branch | Pull Requrest URL |' + '\n')
             f.write('| :--------- | :------------ | :------------ | :---------------- |' + '\n')
             for _ in list:
-                f.write(f'| {_.repo_name} | {_.source} | {_.target} | {_.pull_request_url} | \n') 
+                f.write(f'| {_.repo_name} | {_.source} | {_.target} | [{_.pull_request_url}]({_.pull_request_url}) | \n') 
             f.write('\n')
