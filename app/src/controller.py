@@ -56,7 +56,9 @@ class GitController():
                 return feature_branch, diff_list
 
     def _git_clone(self, git_dir:str):
+        logger.debug("git clone start.")
         git_url = ImportEnvKeyEnum.GIT_CLONE_URL.value + '/' + self.repo_name
+        logger.info(f'git clone {git_url}')
         stream = os.popen(
             f'{GitShEnum.CLONE.path} \
             {git_dir} \
@@ -65,6 +67,7 @@ class GitController():
             {self.branch.source} ')
 
         logger.info(stream.read())
+        logger.debug("git clone finish.")
     
     def _git_diff(self, git_repo_home:str):
         stream = os.popen(
@@ -118,7 +121,7 @@ class GetRepositoryIdController():
             for v in result['value']:
                 self.id_dict[v['name']] = v['id']
 
-            self.id_dict[repo] = id
+            id = self.id_dict[repo]
 
             logger.info(f'RepositoryId , {repo} : {id}')
             
